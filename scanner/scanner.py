@@ -1,5 +1,5 @@
 import nmap
-from datetime import datetime
+from datetime import datetime, timezone
 from network_info import get_default_gateway, get_subnet
 
 def get_network_range():
@@ -33,7 +33,7 @@ def scan_network(network_range=None):
             devices.append({
                 "ip": host,
                 "hostname": hostname,
-                "seen_at": datetime.utcnow()
+                "seen_at": datetime.now(timezone.utc)
             })
     return devices
 
