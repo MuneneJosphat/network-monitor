@@ -1,3 +1,4 @@
+import os
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, Float
 from sqlalchemy.orm import declarative_base, sessionmaker
 from datetime import datetime, timezone
@@ -42,7 +43,9 @@ class DNSQuery(Base):
     queried_at = Column(DateTime, default=utcnow)
     flagged = Column(Integer, default=0)  # 0 = normal, 1 = flagged as risky
 
-engine = create_engine("sqlite:///data/network_monitor.db")
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DB_PATH = os.path.join(BASE_DIR, "data", "network_monitor.db")
+engine = create_engine(f"sqlite:///{DB_PATH}")
 SessionLocal = sessionmaker(bind=engine)
 
 def init_db():
@@ -50,4 +53,4 @@ def init_db():
 
 if __name__ == "__main__":
     init_db()
-    print("Database initialized at data/network_monitor.db")
+    print(f"Database initialized at {DB_PATH}")
