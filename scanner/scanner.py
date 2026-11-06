@@ -1,6 +1,9 @@
 import nmap
 from datetime import datetime, timezone
+from mac_vendor_lookup import MacLookup
 from network_info import get_default_gateway, get_subnet
+
+mac_lookup = MacLookup()
 
 def get_network_range():
     gateway_ip, interface = get_default_gateway()
@@ -15,6 +18,12 @@ def get_network_range():
     network_range = f"{parts[0]}.{parts[1]}.{parts[2]}.0/24"
     return network_range
 
+def lookup_vendor(mac_address):
+    try:
+        return mac_lookup.lookup(mac_address)
+    except Exception:
+        return "Unknown"
+
 def scan_network(network_range=None):
     if not network_range:
         network_range = get_network_range()
@@ -24,21 +33,34 @@ def scan_network(network_range=None):
 
     scanner = nmap.PortScanner()
     print(f"Scanning {network_range}, this may take a moment...")
-    scanner.scan(hosts=network_range, arguments="-sn")  # -sn = ping scan, no port scan yet
+    # -sn = no port scan, just discovery. nmap uses ARP automatically
+    # on the local subnet, which is what gives us MAC addresses.
+    scanner.scan(hosts=network_range, arguments="-sn")
 
     devices = []
     for host in scanner.all_hosts():
-        if scanner[host].state() == "up":
-            hostname = scanner[host].hostname() or "Unknown"
-            devices.append({
-                "ip": host,
-                "hostname": hostname,
-                "seen_at": datetime.now(timezone.utc)
-            })
+        if scanner[host].state() != "up":
+            continue
+
+        hostname = scanner[host].hostname() or "Unknown"
+        mac_address = None
+        vendor = "Unknown"
+
+        if "mac" in scanner[host]["addresses"]:
+            mac_address = scanner[host]["addresses"]["mac"]
+            vendor = lookup_vendor(mac_address)
+
+        devices.append({
+            "ip": host,
+            "hostname": hostname,
+            "mac": mac_address or "Unavailable",
+            "vendor": vendor,
+            "seen_at": datetime.now(timezone.utc)
+        })
     return devices
 
 if __name__ == "__main__":
     found = scan_network()
     print(f"\nFound {len(found)} device(s):")
     for d in found:
-        print(f"  IP: {d['ip']:<15} Hostname: {d['hostname']}")
+        print(f"  IP: {d['ip']:<15} MAC: {d['mac']:<17} Vendor: {d['vendor']:<20} Hostname: {d['hostname']}")
