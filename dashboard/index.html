@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Network Monitor</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --card-bg: #1a1d27;
+    --text: #e6e6e6;
+    --muted: #9aa0ab;
+    --low: #3ddc84;
+    --medium: #f5c542;
+    --high: #f57c42;
+    --critical: #f54242;
+    --border: #2a2d3a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    margin: 0;
+    padding: 24px;
+  }
+  h1 {
+    font-size: 1.4rem;
+    margin-bottom: 4px;
+  }
+  p.subtitle {
+    color: var(--muted);
+    margin-top: 0;
+    margin-bottom: 24px;
+  }
+  .device-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .device-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .device-card h2 {
+    font-size: 1rem;
+    margin: 0 0 8px 0;
+  }
+  .device-card .row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .badge.Low { background: rgba(61,220,132,0.15); color: var(--low); }
+  .badge.Medium { background: rgba(245,197,66,0.15); color: var(--medium); }
+  .badge.High { background: rgba(245,124,66,0.15); color: var(--high); }
+  .badge.Critical { background: rgba(245,66,66,0.15); color: var(--critical); }
+  #status { color: var(--muted); font-size: 0.85rem; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+
+<h1>Network Monitor</h1>
+<p class="subtitle">Devices seen on your network</p>
+<div id="status">Loading devices...</div>
+<div class="device-grid" id="device-grid"></div>
+
+<script>
+const API_URL = "http://127.0.0.1:8000/devices";
+
+async function loadDevices() {
+  const statusEl = document.getElementById("status");
+  const grid = document.getElementById("device-grid");
+
+  try {
+    const response = await fetch(API_URL);
+    if (!response.ok) throw new Error("API returned " + response.status);
+    const devices = await response.json();
+
+    grid.innerHTML = "";
+
+    if (devices.length === 0) {
+      statusEl.textContent = "No devices found yet.";
+      return;
+    }
+
+    statusEl.textContent = devices.length + " device(s) found";
+
+    devices.forEach(d => {
+      const card = document.createElement("div");
+      card.className = "device-card";
+      card.innerHTML = `
+        <h2>${d.nickname || d.hostname || "Unknown device"}</h2>
+        <div class="row"><span>IP</span><span>${d.ip_address || "-"}</span></div>
+        <div class="row"><span>MAC</span><span>${d.mac_address || "-"}</span></div>
+        <div class="row"><span>Vendor</span><span>${d.vendor || "Unknown"}</span></div>
+        <div class="row"><span>Last seen</span><span>${new Date(d.last_seen).toLocaleString()}</span></div>
+        <div class="row"><span>Risk</span><span class="badge ${d.risk_level}">${d.risk_level}</span></div>
+      `;
+      grid.appendChild(card);
+    });
+  } catch (err) {
+    statusEl.textContent = "Could not load devices: " + err.message;
+  }
+}
+
+loadDevices();
+setInterval(loadDevices, 10000); // refresh every 10 seconds
+</script>
+
+</body>
+</html>

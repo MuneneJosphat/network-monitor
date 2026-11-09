@@ -4,9 +4,17 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "scanner"))
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from models import SessionLocal, Device
 
 app = FastAPI(title="Network Monitor API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 def root():
