@@ -6,14 +6,13 @@ from network_info import get_default_gateway, get_subnet
 mac_lookup = MacLookup()
 
 def get_network_range():
-    gateway_ip, interface = get_default_gateway()
+    gateway_ip, local_ip = get_default_gateway()
     if not gateway_ip:
         return None
-    subnet = get_subnet(interface)
+    subnet = get_subnet()
     if not subnet:
         return None
     # Build a simple CIDR assuming a /24 style home network
-    # We refine this later once we're on the real LAN
     parts = gateway_ip.split(".")
     network_range = f"{parts[0]}.{parts[1]}.{parts[2]}.0/24"
     return network_range
@@ -33,8 +32,6 @@ def scan_network(network_range=None):
 
     scanner = nmap.PortScanner()
     print(f"Scanning {network_range}, this may take a moment...")
-    # -sn = no port scan, just discovery. nmap uses ARP automatically
-    # on the local subnet, which is what gives us MAC addresses.
     scanner.scan(hosts=network_range, arguments="-sn")
 
     devices = []
