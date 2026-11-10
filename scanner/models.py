@@ -19,6 +19,7 @@ class Device(Base):
     nickname = Column(String)
     device_type = Column(String)
     os_guess = Column(String)
+    open_ports = Column(String)
     first_seen = Column(DateTime, default=utcnow)
     last_seen = Column(DateTime, default=utcnow)
     is_known = Column(Integer, default=0)  # 0 = unknown, 1 = approved
