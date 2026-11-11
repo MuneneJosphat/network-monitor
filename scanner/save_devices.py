@@ -3,7 +3,7 @@ from models import SessionLocal, Device, init_db
 from datetime import datetime, timezone
 
 def save_devices(devices):
-    init_db()  # safe to call every time, only creates tables if missing
+    init_db()
     session = SessionLocal()
 
     new_count = 0
@@ -12,7 +12,7 @@ def save_devices(devices):
     for d in devices:
         mac = d.get("mac")
         if not mac or mac == "Unavailable":
-            continue  # skip devices we couldn't identify by MAC
+            continue
 
         existing = session.query(Device).filter_by(mac_address=mac).first()
 
@@ -20,6 +20,9 @@ def save_devices(devices):
             existing.ip_address = d["ip"]
             existing.hostname = d["hostname"]
             existing.vendor = d["vendor"]
+            existing.device_type = d.get("device_type", existing.device_type)
+            existing.os_guess = d.get("os_guess", existing.os_guess)
+            existing.open_ports = d.get("open_ports", existing.open_ports)
             existing.last_seen = datetime.now(timezone.utc)
             updated_count += 1
         else:
@@ -28,6 +31,9 @@ def save_devices(devices):
                 ip_address=d["ip"],
                 hostname=d["hostname"],
                 vendor=d["vendor"],
+                device_type=d.get("device_type"),
+                os_guess=d.get("os_guess"),
+                open_ports=d.get("open_ports"),
                 first_seen=datetime.now(timezone.utc),
                 last_seen=datetime.now(timezone.utc),
             )
