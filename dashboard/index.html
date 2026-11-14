@@ -15,6 +15,7 @@
     --high: #f57c42;
     --critical: #f54242;
     --border: #2a2d3a;
+    --accent: #5b8cff;
   }
   * { box-sizing: border-box; }
   body {
@@ -47,6 +48,27 @@
   .device-card h2 {
     font-size: 1rem;
     margin: 0 0 8px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .edit-icon {
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 0.8rem;
+    border: none;
+    background: none;
+    padding: 0;
+  }
+  .edit-icon:hover { color: var(--accent); }
+  .nickname-input {
+    background: var(--bg);
+    border: 1px solid var(--accent);
+    color: var(--text);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 0.95rem;
+    width: 100%;
   }
   .device-card .row {
     display: flex;
@@ -95,6 +117,40 @@
 <script>
 const API_URL = "http://127.0.0.1:8000/devices";
 
+async function saveNickname(deviceId, newNickname) {
+  try {
+    await fetch(`${API_URL}/${deviceId}/nickname`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nickname: newNickname })
+    });
+  } catch (err) {
+    alert("Could not save nickname: " + err.message);
+  }
+  loadDevices();
+}
+
+function startEditing(deviceId, currentName) {
+  const titleEl = document.getElementById(`title-${deviceId}`);
+  titleEl.innerHTML = `
+    <input type="text" class="nickname-input" id="input-${deviceId}" value="${currentName}" />
+  `;
+  const input = document.getElementById(`input-${deviceId}`);
+  input.focus();
+  input.select();
+
+  const finish = () => {
+    const newValue = input.value.trim();
+    if (newValue) saveNickname(deviceId, newValue);
+    else loadDevices();
+  };
+
+  input.addEventListener("blur", finish);
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") finish();
+  });
+}
+
 async function loadDevices() {
   const statusEl = document.getElementById("status");
   const grid = document.getElementById("device-grid");
@@ -128,8 +184,13 @@ async function loadDevices() {
         `;
       }
 
+      const displayName = d.nickname || d.hostname || "Unknown device";
+
       card.innerHTML = `
-        <h2>${d.nickname || d.hostname || "Unknown device"}</h2>
+        <h2 id="title-${d.id}">
+          <span>${displayName}</span>
+          <button class="edit-icon" onclick="startEditing(${d.id}, '${displayName.replace(/'/g, "\\'")}')">✎ rename</button>
+        </h2>
         <div class="row"><span>IP</span><span>${d.ip_address || "-"}</span></div>
         <div class="row"><span>MAC</span><span>${d.mac_address || "-"}</span></div>
         <div class="row"><span>Vendor</span><span>${d.vendor || "Unknown"}</span></div>
