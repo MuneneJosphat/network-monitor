@@ -35,10 +35,12 @@ def get_devices():
             "nickname": d.nickname,
             "device_type": d.device_type,
             "os_guess": d.os_guess,
+            "open_ports": d.open_ports,
             "first_seen": d.first_seen.isoformat() if d.first_seen else None,
             "last_seen": d.last_seen.isoformat() if d.last_seen else None,
             "is_known": d.is_known,
             "risk_level": d.risk_level,
+            "risk_reasons": d.risk_reasons,
         })
     session.close()
     return result

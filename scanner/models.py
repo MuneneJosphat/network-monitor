@@ -24,6 +24,7 @@ class Device(Base):
     last_seen = Column(DateTime, default=utcnow)
     is_known = Column(Integer, default=0)  # 0 = unknown, 1 = approved
     risk_level = Column(String, default="Low")  # Low, Medium, High, Critical
+    risk_reasons = Column(String)  # semicolon separated list of why this risk level was given
 
 class Alert(Base):
     __tablename__ = "alerts"

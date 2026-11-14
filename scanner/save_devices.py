@@ -27,6 +27,7 @@ def save_devices(devices):
             gateway_ip=gateway_ip,
             mac_address=mac
         )
+        reasons_str = "; ".join(reasons)
 
         existing = session.query(Device).filter_by(mac_address=mac).first()
 
@@ -38,6 +39,7 @@ def save_devices(devices):
             existing.os_guess = d.get("os_guess", existing.os_guess)
             existing.open_ports = d.get("open_ports", existing.open_ports)
             existing.risk_level = risk_level
+            existing.risk_reasons = reasons_str
             existing.last_seen = datetime.now(timezone.utc)
             updated_count += 1
         else:
@@ -50,6 +52,7 @@ def save_devices(devices):
                 os_guess=d.get("os_guess"),
                 open_ports=d.get("open_ports"),
                 risk_level=risk_level,
+                risk_reasons=reasons_str,
                 first_seen=datetime.now(timezone.utc),
                 last_seen=datetime.now(timezone.utc),
             )
@@ -57,7 +60,7 @@ def save_devices(devices):
             new_count += 1
 
         if reasons and reasons[0] != "No risk indicators found":
-            print(f"  {d['ip']:<15} Risk: {risk_level:<10} Reasons: {'; '.join(reasons)}")
+            print(f"  {d['ip']:<15} Risk: {risk_level:<10} Reasons: {reasons_str}")
 
     session.commit()
     session.close()

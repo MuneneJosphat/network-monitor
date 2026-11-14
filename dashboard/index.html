@@ -71,6 +71,17 @@
   .badge.Medium { background: rgba(245,197,66,0.15); color: var(--medium); }
   .badge.High { background: rgba(245,124,66,0.15); color: var(--high); }
   .badge.Critical { background: rgba(245,66,66,0.15); color: var(--critical); }
+  .reasons {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  .reasons ul {
+    margin: 4px 0 0 0;
+    padding-left: 18px;
+  }
   #status { color: var(--muted); font-size: 0.85rem; margin-bottom: 16px; }
 </style>
 </head>
@@ -105,6 +116,18 @@ async function loadDevices() {
     devices.forEach(d => {
       const card = document.createElement("div");
       card.className = "device-card";
+
+      let reasonsHtml = "";
+      if (d.risk_reasons && d.risk_level !== "Low") {
+        const reasonList = d.risk_reasons.split(";").map(r => r.trim()).filter(Boolean);
+        reasonsHtml = `
+          <div class="reasons">
+            Why this risk level:
+            <ul>${reasonList.map(r => `<li>${r}</li>`).join("")}</ul>
+          </div>
+        `;
+      }
+
       card.innerHTML = `
         <h2>${d.nickname || d.hostname || "Unknown device"}</h2>
         <div class="row"><span>IP</span><span>${d.ip_address || "-"}</span></div>
@@ -115,6 +138,7 @@ async function loadDevices() {
         <div class="row"><span>Open ports</span><span>${d.open_ports || "None found"}</span></div>
         <div class="row"><span>Last seen</span><span>${new Date(d.last_seen).toLocaleString()}</span></div>
         <div class="row"><span>Risk</span><span class="badge ${d.risk_level}">${d.risk_level}</span></div>
+        ${reasonsHtml}
       `;
       grid.appendChild(card);
     });
