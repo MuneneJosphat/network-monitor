@@ -51,9 +51,14 @@
   .device-card .row {
     display: flex;
     justify-content: space-between;
+    gap: 12px;
     font-size: 0.85rem;
     color: var(--muted);
     margin-bottom: 4px;
+  }
+  .device-card .row span:last-child {
+    text-align: right;
+    word-break: break-word;
   }
   .badge {
     display: inline-block;
@@ -105,6 +110,9 @@ async function loadDevices() {
         <div class="row"><span>IP</span><span>${d.ip_address || "-"}</span></div>
         <div class="row"><span>MAC</span><span>${d.mac_address || "-"}</span></div>
         <div class="row"><span>Vendor</span><span>${d.vendor || "Unknown"}</span></div>
+        <div class="row"><span>Type</span><span>${d.device_type || "Unknown"}</span></div>
+        <div class="row"><span>OS guess</span><span>${d.os_guess || "Unknown"}</span></div>
+        <div class="row"><span>Open ports</span><span>${d.open_ports || "None found"}</span></div>
         <div class="row"><span>Last seen</span><span>${new Date(d.last_seen).toLocaleString()}</span></div>
         <div class="row"><span>Risk</span><span class="badge ${d.risk_level}">${d.risk_level}</span></div>
       `;
@@ -116,7 +124,7 @@ async function loadDevices() {
 }
 
 loadDevices();
-setInterval(loadDevices, 10000); // refresh every 10 seconds
+setInterval(loadDevices, 10000);
 </script>
 
 </body>
